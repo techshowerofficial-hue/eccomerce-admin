@@ -1,0 +1,88 @@
+.app-content{
+    display: flex;
+   
+}/* Main App */
+.App {
+  min-height: 100vh;
+  background: #f8f9fc;
+}
+
+/* Top Tabs Container */
+.admin-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 30px;
+  background: #ffffff;
+  border-bottom: 1px solid #e8eaf0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Individual Tab */
+.admin-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 20px;
+  border-radius: 8px;
+  color: #606775;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+.admin-tab:hover {
+  background: #f2f4f8;
+  color: #222b45;
+}
+
+/* Active Tab */
+.admin-tab.active {
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+}
+
+/* Main Page Content */
+.admin-main-content {
+  padding: 25px 30px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .admin-tabs {
+    padding: 12px 15px;
+    gap: 5px;
+  }
+
+  .admin-tab {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .admin-main-content {
+    padding: 18px 15px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .admin-tabs {
+    gap: 4px;
+  }
+
+  .admin-tab {
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+
+  .admin-main-content {
+    padding: 15px 10px;
+  }
+}

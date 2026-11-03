@@ -1,0 +1,10 @@
+.Navbar{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 4%;
+}
+.Navbar img{
+    width: 50px;
+    border-radius: 50%;
+}
