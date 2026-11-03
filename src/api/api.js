@@ -1,3 +1,3 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_URL = "https://eccomerce-backend-c0t2.onrender.com" || "http://localhost:4000";
 
 export default API_URL;
