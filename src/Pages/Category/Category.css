@@ -52,7 +52,16 @@
   font-size: 14px;
   background: #fffdfb;
 }
-
+.category-form-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #ded5cd;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  background: #fffdfb;
+}
 .category-form-field input:focus {
   border-color: #9a7455;
   box-shadow: 0 0 0 3px rgba(154, 116, 85, 0.1);

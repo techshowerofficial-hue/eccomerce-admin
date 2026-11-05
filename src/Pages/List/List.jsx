@@ -3,6 +3,15 @@ import "./List.css";
 import axios from "axios";
 import API_URL from "../../api/api";
 
+const getProductImageUrl = (image) => {
+  if (!image) return "";
+
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    return image;
+  }
+
+  return `${API_URL.replace(/\/+$/, "")}/images/${image.replace(/^\/+/, "")}`;
+};
 const List = () => {
 const [list, setList] = useState([]);
 const [loading, setLoading] = useState(true);
@@ -270,7 +279,7 @@ role="alert"
                 <td>
    <img
   className="product-table-image"
-  src={`${API_URL}/images/${item.images?.[0] || item.image}`}
+src={getProductImageUrl(item.images?.[0] || item.image)}
   alt={item.name}
   loading="lazy"
   onError={(event) => {
@@ -333,7 +342,7 @@ role="alert"
             <div className="mobile-product-top">
          <img
   className="mobile-product-image"
-  src={`${API_URL}/images/${item.images?.[0] || item.image}`}
+  src={getProductImageUrl(item.images?.[0] || item.image)}
   alt={item.name}
   loading="lazy"
   onError={(event) => {

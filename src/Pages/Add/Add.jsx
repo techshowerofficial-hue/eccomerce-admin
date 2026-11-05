@@ -8,6 +8,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const initialData = {
   name: "",
   description: "",
+  parentCategory: "",
   category: "",
   marketPrice: "",
   price: "",
@@ -17,7 +18,8 @@ const initialData = {
 const Add = () => {
   const [data, setData] = useState(initialData);
   const [images, setImages] = useState([]);
-  const [categories, setCategories] = useState([]);
+const [categories, setCategories] = useState([]);
+const [parentCategories, setParentCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
@@ -33,32 +35,37 @@ const Add = () => {
 
   // Fetch categories
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(
-          `${API_URL}/api/categories/list`
-        );
+const fetchCategories = async () => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/categories/list`
+    );
 
-        if (response.data.success) {
-          const activeCategories = (response.data.data || []).filter(
-            (category) => category.isActive !== false
-          );
+    if (response.data.success) {
+      const allCategories = (response.data.data || []).filter(
+        (category) => category.isActive !== false
+      );
 
-          setCategories(activeCategories);
+      // Parent categories only
+      const parents = allCategories.filter(
+        (category) => !category.parentCategory
+      );
 
-          if (activeCategories.length > 0) {
-            setData((prev) => ({
-              ...prev,
-              category: prev.category || activeCategories[0].name,
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Fetch categories error:", error);
-      } finally {
-        setCategoriesLoading(false);
-      }
-    };
+      setParentCategories(parents);
+
+      // Child categories only
+      const children = allCategories.filter(
+        (category) => !!category.parentCategory
+      );
+
+      setCategories(children);
+    }
+  } catch (error) {
+    console.error("Fetch categories error:", error);
+  } finally {
+    setCategoriesLoading(false);
+  }
+};
 
     fetchCategories();
 
@@ -115,7 +122,24 @@ const Add = () => {
       [name]: value,
     }));
   };
+const onParentCategoryChange = (event) => {
+  const parentId = event.target.value;
 
+  setData((prev) => ({
+    ...prev,
+    parentCategory: parentId,
+    category: "",
+  }));
+};
+
+const filteredCategories = categories.filter((category) => {
+  const categoryParentId =
+    typeof category.parentCategory === "object"
+      ? category.parentCategory?._id
+      : category.parentCategory;
+
+  return String(categoryParentId) === String(data.parentCategory);
+});
   // Image selection
   const onImageChange = (event) => {
     const selectedFiles = Array.from(event.target.files || []);
@@ -201,18 +225,14 @@ const Add = () => {
   }, [images]);
 
   // Clear form after successful submission
-  const clearFormAfterSuccess = () => {
-    setData({
-      ...initialData,
-      category: categories.length > 0 ? categories[0].name : "",
-    });
+const clearFormAfterSuccess = () => {
+  setData({ ...initialData });
+  setImages([]);
 
-    setImages([]);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+};
 
   // Live discount calculation (Market Price vs Selling Price)
   const marketPriceNumber = Number(data.marketPrice);
@@ -246,10 +266,15 @@ const Add = () => {
       return;
     }
 
-    if (!data.category) {
-      showPopup("error", "Please select a category.");
-      return;
-    }
+  if (!data.parentCategory) {
+  showPopup("error", "Please select a parent category.");
+  return;
+}
+
+if (!data.category) {
+  showPopup("error", "Please select a child category.");
+  return;
+}
 
     if (
       data.price === "" ||
@@ -304,7 +329,8 @@ const Add = () => {
 
     formData.append("name", data.name.trim());
     formData.append("description", data.description.trim());
-    formData.append("category", data.category);
+   formData.append("parentCategory", data.parentCategory);
+formData.append("category", data.category);
     formData.append("price", String(data.price));
     formData.append(
       "marketPrice",
@@ -483,97 +509,124 @@ const Add = () => {
           </p>
         </div>
 
-        {/* Category, Price, Stock */}
-        <div className="add-form-grid">
-          <div className="add-form">
-            <label htmlFor="product-category">Category</label>
+   {/* Parent Category */}
+<div className="add-form">
+  <label htmlFor="parent-category">
+    Parent Category
+  </label>
 
-            <select
-              id="product-category"
-              name="category"
-              value={data.category}
-              onChange={onChangeHandler}
-              required
-              disabled={loading || categoriesLoading}
-            >
-              <option value="">
-                {categoriesLoading
-                  ? "Loading categories..."
-                  : "Select category"}
-              </option>
+  <select
+    id="parent-category"
+    value={data.parentCategory}
+    onChange={onParentCategoryChange}
+    required
+    disabled={loading || categoriesLoading}
+  >
+    <option value="">Select Parent Category</option>
 
-              {categories.map((category) => (
-                <option
-                  key={category._id || category.name}
-                  value={category.name}
-                >
-                  {category.name}
-                </option>
-              ))}
-            </select>
+    {parentCategories.map((parent) => (
+      <option key={parent._id} value={parent._id}>
+        {parent.name}
+      </option>
+    ))}
+  </select>
+</div>
 
-            {!categoriesLoading && categories.length === 0 && (
-              <small>Please add a category first.</small>
-            )}
-          </div>
+{/* Child Category */}
+<div className="add-form">
+  <label htmlFor="product-category">
+    Child Category
+  </label>
 
-          <div className="add-form">
-            <label htmlFor="product-market-price">Market Price / MRP (₹)</label>
+  <select
+    id="product-category"
+    name="category"
+    value={data.category}
+    onChange={onChangeHandler}
+    required
+    disabled={
+      loading ||
+      !data.parentCategory ||
+      filteredCategories.length === 0
+    }
+  >
+    <option value="">Select Child Category</option>
 
-            <input
-              id="product-market-price"
-              type="number"
-              name="marketPrice"
-              min="0"
-              step="0.01"
-              value={data.marketPrice}
-              onChange={onChangeHandler}
-              placeholder="Enter original price"
-              disabled={loading}
-            />
-            <small>Optional — original price before discount.</small>
-          </div>
+    {filteredCategories.map((category) => (
+      <option key={category._id} value={category._id}>
+        {category.name}
+      </option>
+    ))}
+  </select>
 
-          <div className="add-form">
-            <label htmlFor="product-price">Selling Price (₹)</label>
+  {data.parentCategory && filteredCategories.length === 0 && (
+    <small>No child categories available for this parent.</small>
+  )}
+</div>
+{/* Market Price */}
 
-            <input
-              id="product-price"
-              type="number"
-              name="price"
-              min="0"
-              step="0.01"
-              value={data.price}
-              onChange={onChangeHandler}
-              placeholder="Enter price"
-              required
-              disabled={loading}
-            />
-            {discountPercentage > 0 && (
-              <small className="discount-preview">
-                Customer discount: {discountPercentage}% OFF
-                {" · "}
-                Save ₹{(marketPriceNumber - sellingPriceNumber).toFixed(2)}
-              </small>
-            )}
-          </div>
+<div className="add-form">
+  <label htmlFor="marketPrice">Market Price (₹)</label>
 
-          <div className="add-form">
-            <label htmlFor="product-stock">Stock Quantity</label>
+<input
+ id="marketPrice"
+ type="number"
+ name="marketPrice"
+ value={data.marketPrice}
+ onChange={onChangeHandler}
+ placeholder="Enter market price"
+ min="0"
+ disabled={loading}
+/>
 
-            <input
-              id="product-stock"
-              type="number"
-              name="stock"
-              min="0"
-              step="1"
-              value={data.stock}
-              onChange={onChangeHandler}
-              placeholder="Enter stock quantity"
-              disabled={loading}
-            />
-          </div>
-        </div>
+</div>
+
+{/* Selling Price */}
+
+<div className="add-form">
+  <label htmlFor="sellingPrice">Selling Price (₹)</label>
+
+<input
+ id="sellingPrice"
+ type="number"
+ name="price"
+ value={data.price}
+ onChange={onChangeHandler}
+ placeholder="Enter selling price"
+ min="0"
+ required
+ disabled={loading}
+/>
+
+</div>
+
+{/* Discount */}
+{discountPercentage > 0 && (
+
+  <div className="add-form">
+    <label>Discount</label>
+    <strong>{discountPercentage}% OFF</strong>
+  </div>
+)}
+
+{/* Stock */}
+
+<div className="add-form">
+  <label htmlFor="stock">Stock Quantity</label>
+
+<input
+ id="stock"
+ type="number"
+ name="stock"
+ value={data.stock}
+ onChange={onChangeHandler}
+ placeholder="Enter available stock"
+ min="0"
+ step="1"
+ disabled={loading}
+/>
+
+</div>
 
         {/* Only Add Product Button - No Reset Button */}
         <div className="add-form-actions">
@@ -583,7 +636,8 @@ const Add = () => {
             disabled={
               loading ||
               categoriesLoading ||
-              categories.length === 0
+              parentCategories.length === 0 ||
+categories.length === 0
             }
           >
             {loading ? (
